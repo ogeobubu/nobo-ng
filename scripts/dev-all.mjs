@@ -5,6 +5,7 @@ const backendHost = '0.0.0.0';
 const frontendHost = '127.0.0.1';
 const backendBasePort = Number(process.env.BACKEND_PORT || 4000);
 const frontendPort = Number(process.env.FRONTEND_PORT || 3000);
+const mobileTarget = (process.env.MOBILE_TARGET || 'device').toLowerCase();
 
 const isPortInUse = (port) => {
   const result = spawnSync('lsof', ['-iTCP:' + port, '-sTCP:LISTEN', '-t'], {
@@ -64,10 +65,15 @@ const spawnWorkspace = (name, command, args, env) => {
 const bootstrap = async () => {
   const backendPort = await findAvailablePort(backendBasePort);
   const lanIp = getLanIp();
-  const mobileApiBaseUrl = `http://${lanIp}:${backendPort}`;
+  const mobileApiBaseUrl =
+    mobileTarget === 'ios' || mobileTarget === 'ios-simulator'
+      ? `http://localhost:${backendPort}`
+      : `http://${lanIp}:${backendPort}`;
+  const mobileCommand = mobileTarget === 'ios' || mobileTarget === 'ios-simulator' ? 'ios' : 'start';
 
   console.log(`Using backend port ${backendPort}, frontend port ${frontendPort}, and mobile API ${mobileApiBaseUrl}`);
   console.log(`Frontend will proxy API requests to http://127.0.0.1:${backendPort}`);
+  console.log(`Mobile target: ${mobileTarget}`);
 
   const children = [
     spawnWorkspace('backend', 'yarn', ['workspace', '@nobong/backend', 'dev'], {
@@ -79,7 +85,7 @@ const bootstrap = async () => {
       VITE_PORT: String(frontendPort),
       VITE_API_PROXY_TARGET: `http://127.0.0.1:${backendPort}`
     }),
-    spawnWorkspace('mobile', 'yarn', ['workspace', '@nobong/mobile', 'start'], {
+    spawnWorkspace('mobile', 'yarn', ['workspace', '@nobong/mobile', mobileCommand], {
       EXPO_PUBLIC_API_BASE_URL: mobileApiBaseUrl
     })
   ];

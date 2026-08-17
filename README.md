@@ -131,6 +131,14 @@ nobo-ng/
     This command starts the backend, the Vite frontend, and the Expo mobile app in one shot.
     It also injects a LAN-based API URL into the mobile app so a physical device can reach the backend during local development.
 
+11. If you want the iOS simulator to open, use:
+
+    ```bash
+    yarn dev:all:ios
+    ```
+
+    In simulator mode, the mobile app points at `http://localhost:<backend-port>` instead of your LAN IP.
+
 ## Docker
 
 To run the full stack with MySQL, backend, and frontend together:
@@ -161,13 +169,15 @@ The container setup uses the same source tree, so changes on your host are refle
 - The backend uses MySQL transactions so checkout and stock updates stay consistent.
 - Orders are persisted in MySQL, not in local JSON files.
 - If you deploy the frontend and backend separately, set `VITE_API_BASE_URL` in the frontend build environment.
-- If you run the mobile app against a device or emulator, set `EXPO_PUBLIC_API_BASE_URL` in `mobile/.env.local`.
+- If you run the mobile app against a device or Android emulator, set `EXPO_PUBLIC_API_BASE_URL` in `mobile/.env.local`.
+- For the iOS simulator, `yarn dev:all:ios` sets the mobile API URL automatically to `localhost`.
 
 ## Scripts
 
 - `yarn dev` starts the local backend and frontend together
 - `yarn dev:local` starts the local backend and frontend workspace processes
 - `yarn dev:all` starts the backend, frontend, and mobile app together
+- `yarn dev:all:ios` starts the backend, frontend, and iOS simulator together
 - `yarn dev:docker` starts MySQL, backend, and frontend together
 - `yarn dev:backend` starts only the backend
 - `yarn dev:frontend` starts only the frontend

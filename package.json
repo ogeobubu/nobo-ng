@@ -2,6 +2,9 @@
   "name": "nobong-assessment",
   "version": "1.0.0",
   "private": true,
+  "resolutions": {
+    "lru-cache": "5.1.1"
+  },
   "workspaces": [
     "backend",
     "frontend",
@@ -11,6 +14,7 @@
     "dev": "node scripts/dev.mjs",
     "dev:local": "node scripts/dev.mjs",
     "dev:all": "node scripts/dev-all.mjs",
+    "dev:all:ios": "MOBILE_TARGET=ios node scripts/dev-all.mjs",
     "dev:docker": "docker compose up --build",
     "dev:backend": "yarn workspace @nobong/backend dev",
     "dev:frontend": "yarn workspace @nobong/frontend dev",

@@ -4,7 +4,6 @@ import {
   Image,
   Modal,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   Text,
@@ -13,6 +12,7 @@ import {
 } from 'react-native';
 import { getProducts, submitCheckout } from './api';
 import type { CartEntry, CustomerForm, Order, Product } from './types';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SHIPPING_THRESHOLD = 60000;
 const SHIPPING_FEE = 3200;
@@ -43,6 +43,7 @@ const secondaryButton =
   `${baseButton} border border-teal-700/10 bg-white/90`;
 
 export default function App() {
+  const insets = useSafeAreaInsets();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -261,7 +262,7 @@ export default function App() {
   } as const;
 
   return (
-    <SafeAreaView className="flex-1 bg-[#f6f1ea]">
+    <SafeAreaView className="flex-1 bg-[#f6f1ea]" edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" />
 
       <View className="absolute inset-0 overflow-hidden">
@@ -272,7 +273,7 @@ export default function App() {
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pb-24 pt-4"
+        contentContainerClassName="px-4 pb-36 pt-4"
         showsVerticalScrollIndicator={false}
       >
         <View className="gap-4">
@@ -315,6 +316,17 @@ export default function App() {
                 </Pressable>
                 <Pressable onPress={openCheckout} className="rounded-full bg-amber-500 px-3 py-2">
                   <Text className="text-xs font-bold uppercase tracking-[0.18em] text-white">Checkout</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    const featured = products[0];
+                    if (featured) {
+                      addToCart(featured);
+                    }
+                  }}
+                  className="rounded-full bg-white/10 px-3 py-2"
+                >
+                  <Text className="text-xs font-bold uppercase tracking-[0.18em] text-white">Try cart</Text>
                 </Pressable>
               </View>
             </View>
@@ -482,6 +494,18 @@ export default function App() {
           </View>
         </View>
       </ScrollView>
+
+      <View
+        className="absolute left-4 right-4 flex-row gap-2 rounded-[22px] border border-white/70 bg-white/90 p-3 shadow-xl shadow-slate-950/10"
+        style={{ bottom: Math.max(insets.bottom, 12) }}
+      >
+        <Pressable onPress={() => setIsCartOpen(true)} className={`${secondaryButton} flex-1`}>
+          <Text className="text-sm font-semibold text-slate-900">Cart {itemCount > 0 ? `(${itemCount})` : ''}</Text>
+        </Pressable>
+        <Pressable onPress={openCheckout} className={`${primaryButton} flex-1`}>
+          <Text className="text-sm font-semibold text-white">Checkout</Text>
+        </Pressable>
+      </View>
 
       <Modal
         visible={isCartOpen}
