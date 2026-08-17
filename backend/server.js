@@ -3,16 +3,25 @@ import { config } from './src/config.js';
 import { closePool, initializeDatabase } from './src/db.js';
 
 const bootstrap = async () => {
-  await initializeDatabase();
+  let dbReady = true;
 
-  const app = createApp();
-  const server = app.listen(config.port, () => {
-    console.log(`Backend API running on http://localhost:${config.port}`);
+  try {
+    await initializeDatabase();
+  } catch (error) {
+    dbReady = false;
+    console.warn(`MySQL is unavailable. Starting API in degraded mode: ${error.message}`);
+  }
+
+  const app = createApp({ dbReady });
+  const server = app.listen(config.port, config.host, () => {
+    console.log(`Backend API running on http://${config.host}:${config.port}`);
   });
 
   const shutdown = async () => {
     server.close(async () => {
-      await closePool();
+      if (dbReady) {
+        await closePool();
+      }
       process.exit(0);
     });
   };

@@ -1,0 +1,11 @@
+.DS_Store
+node_modules
+dist
+backend/node_modules
+frontend/node_modules
+mobile/node_modules
+backend/.env
+frontend/.env.local
+mobile/.env.local
+mobile/.expo
+*.log

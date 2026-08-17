@@ -1,3 +1,4 @@
+import { networkInterfaces } from 'node:os';
 import { spawn, spawnSync } from 'node:child_process';
 
 const backendHost = '0.0.0.0';
@@ -27,6 +28,22 @@ const findAvailablePort = (startPort) => {
   throw new Error(`No free port found starting at ${startPort}`);
 };
 
+const getLanIp = () => {
+  const interfaces = networkInterfaces();
+
+  for (const entries of Object.values(interfaces)) {
+    if (!entries) continue;
+
+    for (const entry of entries) {
+      if (entry.family === 'IPv4' && !entry.internal) {
+        return entry.address;
+      }
+    }
+  }
+
+  return '127.0.0.1';
+};
+
 const spawnWorkspace = (name, command, args, env) => {
   const child = spawn(command, args, {
     stdio: 'inherit',
@@ -46,8 +63,10 @@ const spawnWorkspace = (name, command, args, env) => {
 
 const bootstrap = async () => {
   const backendPort = await findAvailablePort(backendBasePort);
+  const lanIp = getLanIp();
+  const mobileApiBaseUrl = `http://${lanIp}:${backendPort}`;
 
-  console.log(`Using backend port ${backendPort} and frontend port ${frontendPort}`);
+  console.log(`Using backend port ${backendPort}, frontend port ${frontendPort}, and mobile API ${mobileApiBaseUrl}`);
   console.log(`Frontend will proxy API requests to http://127.0.0.1:${backendPort}`);
 
   const children = [
@@ -59,6 +78,9 @@ const bootstrap = async () => {
       VITE_HOST: frontendHost,
       VITE_PORT: String(frontendPort),
       VITE_API_PROXY_TARGET: `http://127.0.0.1:${backendPort}`
+    }),
+    spawnWorkspace('mobile', 'yarn', ['workspace', '@nobong/mobile', 'start'], {
+      EXPO_PUBLIC_API_BASE_URL: mobileApiBaseUrl
     })
   ];
 

@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "NoboNG Mobile",
+    "slug": "nobong-mobile",
+    "scheme": "nobongmobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-status-bar"
+    ]
+  }
+}

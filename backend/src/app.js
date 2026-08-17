@@ -4,18 +4,25 @@ import { config } from './config.js';
 import { checkout, listOrders } from './services/orders.js';
 import { listProducts } from './services/products.js';
 
-export const createApp = () => {
+export const createApp = ({ dbReady = true } = {}) => {
   const app = express();
 
   app.use(cors({ origin: config.corsOrigin }));
   app.use(express.json({ limit: '1mb' }));
 
   app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', database: dbReady ? 'connected' : 'unavailable' });
   });
 
   app.get('/api/products', async (_req, res, next) => {
     try {
+      if (!dbReady) {
+        return res.status(503).json({
+          success: false,
+          message: 'MySQL is not available. Start the database and try again.'
+        });
+      }
+
       const products = await listProducts();
       res.json({ products });
     } catch (error) {
@@ -25,6 +32,13 @@ export const createApp = () => {
 
   app.post('/api/checkout', async (req, res, next) => {
     try {
+      if (!dbReady) {
+        return res.status(503).json({
+          success: false,
+          message: 'MySQL is not available. Start the database and try again.'
+        });
+      }
+
       const result = await checkout(req.body);
 
       if (result.error) {
@@ -42,6 +56,13 @@ export const createApp = () => {
 
   app.get('/api/orders', async (_req, res, next) => {
     try {
+      if (!dbReady) {
+        return res.status(503).json({
+          success: false,
+          message: 'MySQL is not available. Start the database and try again.'
+        });
+      }
+
       const orders = await listOrders();
       res.json({ orders });
     } catch (error) {

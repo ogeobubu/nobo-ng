@@ -4,6 +4,10 @@ import { initialProducts } from './catalog.js';
 
 let pool;
 
+const delay = (ms) => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+
 const createSchema = async (connection) => {
   await connection.query(`CREATE DATABASE IF NOT EXISTS \`${config.dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
   await connection.changeUser({ database: config.dbName });
@@ -81,30 +85,45 @@ const createSchema = async (connection) => {
   }
 };
 
-export const initializeDatabase = async () => {
-  const bootstrapConnection = await mysql.createConnection({
-    host: config.dbHost,
-    port: config.dbPort,
-    user: config.dbUser,
-    password: config.dbPassword
-  });
+export const initializeDatabase = async ({ retries = 10, retryDelayMs = 2000 } = {}) => {
+  let lastError;
 
-  try {
-    await createSchema(bootstrapConnection);
-  } finally {
-    await bootstrapConnection.end();
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    try {
+      const bootstrapConnection = await mysql.createConnection({
+        host: config.dbHost,
+        port: config.dbPort,
+        user: config.dbUser,
+        password: config.dbPassword
+      });
+
+      try {
+        await createSchema(bootstrapConnection);
+      } finally {
+        await bootstrapConnection.end();
+      }
+
+      pool = mysql.createPool({
+        host: config.dbHost,
+        port: config.dbPort,
+        user: config.dbUser,
+        password: config.dbPassword,
+        database: config.dbName,
+        connectionLimit: config.dbConnectionLimit,
+        waitForConnections: true,
+        namedPlaceholders: true
+      });
+
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries) {
+        await delay(retryDelayMs);
+      }
+    }
   }
 
-  pool = mysql.createPool({
-    host: config.dbHost,
-    port: config.dbPort,
-    user: config.dbUser,
-    password: config.dbPassword,
-    database: config.dbName,
-    connectionLimit: config.dbConnectionLimit,
-    waitForConnections: true,
-    namedPlaceholders: true
-  });
+  throw lastError;
 };
 
 export const getPool = () => {
